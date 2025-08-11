@@ -80,6 +80,10 @@ export default function ApplicationForm() {
       <label>Address *</label>
       <input type="text" name="address" placeholder="Street Address" onChange={handleChange} required />
 
+      <label>Landmark *</label>
+      <input type="text" name="address" placeholder="Landmark" onChange={handleChange} required />
+
+
       <label>Resident Type *</label>
       <div className="row">
         <label><input type="radio" name="residentType" value="Renter" onChange={handleChange} /> Renter</label>
@@ -124,14 +128,14 @@ export default function ApplicationForm() {
 
       <label>Requested Package *</label>
       <div>
-        <label><input type="radio" name="package" value="500" onChange={handleChange} /> Up to 500 Mbps + FREE Digital TV - ₱1299.00</label>
-        <label><input type="radio" name="package" value="300" onChange={handleChange} /> Up to 300 Mbps + FREE Digital TV - ₱1599.00</label>
-        <label><input type="radio" name="package" value="700" onChange={handleChange} /> Up to 700 Mbps + FREE Digital TV - ₱1999.00</label>
+        <label><input type="radio" name="package" value="300" onChange={handleChange} /> Up to 300 Mbps + FREE Digital TV - ₱1260.00</label>
+        <label><input type="radio" name="package" value="500" onChange={handleChange} /> Up to 500 Mbps + FREE Digital TV - ₱1600.00</label>
+        <label><input type="radio" name="package" value="800" onChange={handleChange} /> Up to 800 Mbps + FREE Digital TV - ₱2100.00</label>
       </div>
 
       <label>How did you know about us? *</label>
       <div>
-        {["News", "Facebook", "Instagram", "Billboard", "Sales Agent", "Building Admin", "Flyers", "Tarpaulin", "Referrals"].map((item) => (
+        {["Facebook", "Sales Agent", "Flyers", "Tarpaulin", "Referrals"].map((item) => (
           <label key={item}><input type="checkbox" name="howKnow" value={item} onChange={handleChange} /> {item}</label>
         ))}
       </div>
@@ -142,12 +146,7 @@ export default function ApplicationForm() {
       <label>Name of Contact Person *</label>
       <input type="text" name="contactPerson" onChange={handleChange} required />
 
-      <label>Statement of Account *</label>
-      <div>
-        {["Email", "Walk", "myCVC Account", "SMS"].map((item) => (
-          <label key={item}><input type="checkbox" name="soa" value={item} onChange={handleChange} /> {item}</label>
-        ))}
-      </div>
+
 
       <label>Digital Signature *</label>
       <div className="signature-box">
@@ -163,7 +162,7 @@ export default function ApplicationForm() {
         <button type="button" onClick={clearSignature}>Clear</button>
       </div>
 
-      <button type="submit" className="submit-btn">Next</button>
+      <button type="submit" className="submit-btn">Submit</button>
     </form>
   );
 }
