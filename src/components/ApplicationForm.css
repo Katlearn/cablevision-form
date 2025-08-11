@@ -1,0 +1,65 @@
+.application-form {
+  background: #f4f4ff;
+  padding: 20px;
+  max-width: 600px;
+  margin: auto;
+  border-radius: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.application-form h2 {
+  text-align: center;
+}
+
+.application-form label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.application-form input[type="text"],
+.application-form input[type="email"],
+.application-form input[type="date"],
+.application-form input[type="tel"],
+.application-form input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.signature-box {
+  border: 1px dashed #ccc;
+  padding: 10px;
+  display: inline-block;
+  background: white;
+}
+
+.submit-btn {
+  margin-top: 20px;
+  padding: 10px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.company-logo {
+  width: 80px;
+  height: auto;
+}
