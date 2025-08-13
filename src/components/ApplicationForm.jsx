@@ -1,12 +1,12 @@
 import React, { useState, useRef } from "react";
 import SignaturePad from "react-signature-canvas";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-import "./ApplicationForm.css"; // optional for styling
+//import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import "./ApplicationForm.css";
 import emailjs from "emailjs-com";
 
 export default function ApplicationForm() {
-  const sigCanvas = useRef({});
-  const [markerPosition, setMarkerPosition] = useState({ lat: 14.5995, lng: 120.9842 }); // Default: Manila
+  const sigCanvas = useRef(null); // Correct ref initialization
+  const [markerPosition, setMarkerPosition] = useState({ lat: 14.5995, lng: 120.9842 });
   const [formData, setFormData] = useState({});
 
   const clearSignature = () => {
@@ -21,30 +21,95 @@ export default function ApplicationForm() {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.type === "checkbox") {
+      const { value, checked } = e.target;
+      setFormData((prev) => {
+        const arr = prev.howKnow ? prev.howKnow.split(", ") : [];
+        if (checked) arr.push(value);
+        else arr.splice(arr.indexOf(value), 1);
+        return { ...prev, howKnow: arr.join(", ") };
+      });
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const signatureData = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
+    // Validate signature
+    if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
+      alert("Please provide a signature before submitting.");
+      return;
+    }
 
-    // Combine all data
-    const fullData = {
-      ...formData,
-      markerLat: markerPosition.lat,
-      markerLng: markerPosition.lng,
-      signature: signatureData
+    let signatureData;
+    try {
+      signatureData = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
+    } catch (err) {
+      console.warn("getTrimmedCanvas failed, using raw canvas:", err);
+      signatureData = sigCanvas.current.toDataURL("image/png");
+    }
+
+    // Helper: convert file to base64
+    const toBase64 = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+
+    // Helper: upload file to Google Drive
+    const uploadFile = async (file) => {
+      if (!file) return "";
+      const base64 = await toBase64(file);
+      const response = await fetch(
+        "https://script.google.com/macros/s/AKfycbwP6bKgGJ89qRayLGFBM6YidgHN6Z_Sc9tTkSXe2JMCfDpJDVwd9s-CDQqmH3BSa0d8bQ/exec",
+        {
+          method: "POST",
+          body: new URLSearchParams({
+            file: base64.split(",")[1],
+            fileName: file.name,
+            mimeType: file.type,
+          }),
+        }
+      );
+      const result = await response.json();
+      return result.fileUrl || "";
     };
 
-    // Send via EmailJS
+    const proofBillingFile = e.target.proofBilling.files[0];
+    const validIdFile = e.target.validId.files[0];
+
+    const proofBillingUrl = await uploadFile(proofBillingFile);
+    const validIdUrl = await uploadFile(validIdFile);
+
+    const fullData = {
+      firstName: formData.firstName || "",
+      lastName: formData.lastName || "",
+      date: formData.date || "",
+      residentType: formData.residentType || "",
+      email: formData.email || "",
+      phone1: formData.phone1 || "",
+      phone2: formData.phone2 || "",
+      address: formData.address || "",
+      landmark: formData.landmark || "",
+      markerLat: markerPosition.lat || "",
+      markerLng: markerPosition.lng || "",
+      provider: formData.provider || "",
+      planDescription: formData.planDescription || "",
+      package: formData.package || "",
+      howKnow: formData.howKnow || "",
+      salesAgent: formData.salesAgent || "",
+      contactPerson: formData.contactPerson || "",
+      signature: signatureData || "",
+      proofBillingUrl: proofBillingUrl || "",
+      validIdUrl: validIdUrl || "",
+    };
+    console.log("Sending this to EmailJS:", fullData);
     emailjs
-      .send(
-        "YOUR_SERVICE_ID", // Replace with your EmailJS service ID
-        "YOUR_TEMPLATE_ID", // Replace with your EmailJS template ID
-        fullData,
-        "YOUR_PUBLIC_KEY" // Replace with your EmailJS public key
-      )
+      .send("service_7v9t0gf", "template_j8pi2yr", fullData, "rJg7udoILLc-IjK_Q")
       .then(
         (result) => {
           console.log("Email successfully sent!", result.text);
@@ -57,10 +122,8 @@ export default function ApplicationForm() {
       );
   };
 
-
   return (
     <form className="application-form" onSubmit={handleSubmit}>
-      {/* Logo section */}
       <div className="logo-container">
         <img src="/logo.jpg" alt="Company Logo" className="company-logo" />
       </div>
@@ -81,8 +144,7 @@ export default function ApplicationForm() {
       <input type="text" name="address" placeholder="Street Address" onChange={handleChange} required />
 
       <label>Landmark *</label>
-      <input type="text" name="address" placeholder="Landmark" onChange={handleChange} required />
-
+      <input type="text" name="landmark" placeholder="Landmark" onChange={handleChange} required />
 
       <label>Resident Type *</label>
       <div className="row">
@@ -100,19 +162,11 @@ export default function ApplicationForm() {
       <input type="tel" name="phone2" placeholder="(000) 000-0000" onChange={handleChange} />
 
       <label>Location (Pin Your Address) *</label>
-      <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
-        <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "300px" }}
-          center={markerPosition}
-          zoom={15}
-        >
-          <Marker
-            position={markerPosition}
-            draggable={true}
-            onDragEnd={handleMarkerDragEnd}
-          />
+      {/* <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
+        <GoogleMap mapContainerStyle={{ width: "100%", height: "300px" }} center={markerPosition} zoom={15}>
+          <Marker position={markerPosition} draggable={true} onDragEnd={handleMarkerDragEnd} />
         </GoogleMap>
-      </LoadScript>
+      </LoadScript>*/}
 
       <label>Proof of Billing *</label>
       <input type="file" name="proofBilling" required />
@@ -146,18 +200,12 @@ export default function ApplicationForm() {
       <label>Name of Contact Person *</label>
       <input type="text" name="contactPerson" onChange={handleChange} required />
 
-
-
       <label>Digital Signature *</label>
       <div className="signature-box">
         <SignaturePad
           ref={sigCanvas}
           penColor="black"
-          canvasProps={{
-            width: 400,
-            height: 200,
-            className: "sigCanvas"
-          }}
+          canvasProps={{ width: 400, height: 200, className: "sigCanvas" }}
         />
         <button type="button" onClick={clearSignature}>Clear</button>
       </div>
